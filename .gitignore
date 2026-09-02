@@ -1,0 +1,17 @@
+# Local Virtual Environment
+.venv/
+
+# API keys and environments
+.env
+
+# compiled version of imports
+__pycache__/
+
+# another form of python cache
+*.pyc
+
+# pytest cache
+.pytest_cache/
+
+# workspace(where examples are)
+workspace/
