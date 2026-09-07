@@ -62,13 +62,51 @@ TOOLS = [
     },
 ]
 
-def ask_model(task: str) -> str:
-    response = client.responses.create(
-        model = MODEL_NAME, 
-        instructions = AGENT_INSTRUCTIONS, 
-        input = task, 
-        tools = TOOLS
-    )
-    print(response.output)
-    return response.output_text
+def run_tool(tool_name: str, arguments_json: str) -> str:
+    arguments = json.loads(arguments_json)
 
+    if tool_name == "list_files":
+        return json.dumps(tools.list_files())
+
+    if tool_name == "read_file":
+        return tools.read_file(arguments["relative_path"])
+
+    if tool_name == "write_file":
+        return tools.write_file(
+            arguments["relative_path"],
+            arguments["content"],
+        )
+
+    raise ValueError(f"Unknown tool: {tool_name}")
+
+def ask_model(task: str) -> str:
+    input_items = [
+        {
+            "role": "user", 
+            "content": task
+        }
+    ]
+    while True:
+        response = client.responses.create(
+            model = MODEL_NAME, 
+            instructions = AGENT_INSTRUCTIONS, 
+            input = input_items, 
+            tools = TOOLS
+        )
+        input_items += response.output
+        tool_was_called = False
+
+        for item in response.output:
+            if item.type != "function_call":
+                continue
+            tool_was_called = True
+            tool_result = run_tool(item.name, item.arguments)
+            input_items.append(
+                {
+                    "type": "function_call_output",
+                    "call_id": item.call_id,
+                    "output": tool_result,
+                }
+            )
+        if not tool_was_called:
+            return response.output_text
