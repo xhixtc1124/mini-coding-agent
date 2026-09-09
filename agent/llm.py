@@ -79,13 +79,8 @@ def run_tool(tool_name: str, arguments_json: str) -> str:
 
     raise ValueError(f"Unknown tool: {tool_name}")
 
-def ask_model(task: str) -> str:
-    input_items = [
-        {
-            "role": "user", 
-            "content": task
-        }
-    ]
+def ask_model(conversation: list[dict]) -> str:
+    input_items = conversation
     while True:
         response = client.responses.create(
             model = MODEL_NAME, 
