@@ -1,24 +1,47 @@
-from agent.llm import ask_model
-from agent.memory import load_memory
-from agent.memory import save_memory
+import asyncio
+from uuid import uuid4
 
-def main() -> None:
+from temporalio.client import Client
+
+from agent.memory import load_memory, save_memory
+from agent.workflow import CodingAgentWorkflow
+
+
+async def main() -> None:
     print("Mini Coding Agent")
+
+    client = await Client.connect("localhost:7233")
     conversation = load_memory()
+
     while True:
         print("What would you like to work on?\n")
-        #print("Type 'exit' to terminate this program.\n")
-        task = input("-----------------------------------\n")
-        if task.lower() == "exit":
-            break
-        conversation.append(
-            {
-                "role": "user", 
-                "content": task
-            }
+
+        task = await asyncio.to_thread(
+            input, "-----------------------------------\n"
         )
-        print(ask_model(conversation))
+
+        if task.strip().lower() == "exit":
+            break
+
+        if not task.strip():
+            continue
+
+        conversation.append({
+            "role": "user",
+            "content": task,
+        })
+
+        result = await client.execute_workflow(
+            CodingAgentWorkflow.run,
+            conversation,
+            id=f"coding-agent-{uuid4()}",
+            task_queue="coding-agent",
+        )
+
+        conversation = result["conversation"]
         save_memory(conversation)
+        print(result["reply"])
+
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
