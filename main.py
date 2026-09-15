@@ -19,10 +19,8 @@ async def main() -> None:
         task = await asyncio.to_thread(
             input, "-----------------------------------\n"
         )
-
         if task.strip().lower() == "exit":
             break
-
         if not task.strip():
             continue
 
@@ -34,8 +32,8 @@ async def main() -> None:
         result = await client.execute_workflow(
             CodingAgentWorkflow.run,
             conversation,
-            id=f"coding-agent-{uuid4()}",
-            task_queue="coding-agent",
+            id = f"coding-agent-{uuid4()}",
+            task_queue = "coding-agent",
         )
 
         conversation = result["conversation"]
