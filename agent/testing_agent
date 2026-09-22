@@ -1,0 +1,9 @@
+from agent.tools import list_files, read_files
+
+def collect_python_files() -> dict[str, str]:
+    files = {}
+    for filename in list_files():
+        if filename.endswith(".py"):
+            sandbox_path = filename.replace("\\", "/")
+            file[sandbox_path] = read_file(filename)
+    return files

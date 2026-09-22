@@ -6,6 +6,8 @@ from temporalio.client import Client
 from agent.memory import load_memory, save_memory
 from agent.workflow import CodingAgentWorkflow
 
+from agent.sandbox import run_tests
+import sys
 
 async def main() -> None:
     print("Mini Coding Agent")
@@ -42,4 +44,25 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    if "--test-sandbox" in sys.argv:
+        files = {
+            "calculator.py": (
+                "def add(a, b):\n"
+                "    return a + b\n"
+            ),
+            "test_calculator.py": (
+                "from calculator import add\n"
+                "\n"
+                "def test_add():\n"
+                "    assert add(2, 3) == 6\n"
+            ),
+        }
+
+        result = run_tests(files)
+
+        print("STDOUT:", result["stdout"])
+        print("STDERR:", result["stderr"])
+        print("EXIT CODE:", result["exit_code"])
+
+    else:
+        asyncio.run(main())
